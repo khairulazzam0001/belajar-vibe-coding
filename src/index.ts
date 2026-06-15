@@ -1,8 +1,8 @@
 import { Elysia, t } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 import { db } from "./db/connection";
-import { users } from "./db/schema";
 import { sql } from "drizzle-orm";
+import { userRoutes } from "./routes/user-routes";
 
 const port = process.env.PORT || 3000;
 
@@ -19,6 +19,7 @@ const app = new Elysia()
       },
     })
   )
+  .use(userRoutes)
   .get("/", () => {
     return {
       message: "Welcome to Belajar Vibe Coding Backend API!",
@@ -44,47 +45,6 @@ const app = new Elysia()
       };
     }
   })
-  .get("/users", async () => {
-    try {
-      const data = await db.select().from(users);
-      return {
-        success: true,
-        data,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || "Failed to fetch users",
-      };
-    }
-  })
-  .post(
-    "/users",
-    async ({ body, set }) => {
-      try {
-        const { name, email } = body;
-        await db.insert(users).values({ name, email });
-        set.status = 201;
-        return {
-          success: true,
-          message: "User created successfully",
-          data: { name, email },
-        };
-      } catch (error: any) {
-        set.status = 500;
-        return {
-          success: false,
-          error: error.message || "Failed to create user",
-        };
-      }
-    },
-    {
-      body: t.Object({
-        name: t.String({ minLength: 1 }),
-        email: t.String({ format: "email" }),
-      }),
-    }
-  )
   .listen(port);
 
 console.log(
